@@ -25,23 +25,29 @@ end
 
 # 都道府県名の配列
 pref_names = ret.values.map do |n|
-  sql = "SELECT distinct n03_001 pref FROM \"#{n[0]}\""
-  conn.exec(sql).select{|n| not n["pref"].nil? and not n["pref"].strip.nil?}
+  sql = "SELECT distinct n03_001 pref FROM \"#{n[0]}\" where n03_001 is not null"
+  conn.exec(sql)[0]["pref"]
 end
 
-insert_pref_sql = "insert into n03_001 (id, n03_001) values ($1, $2)"
+pref_names.each{|pn| puts pn.to_s.encode("cp932")}
 
-conn.prepare("insert_pref", sql)
+# insert_pref_sql = "insert into n03_001 (id, n03_001) values (select $1, n03_001)"
 
-pref_names.flatten.each_with_index do |e, i|
-  if i == 0
-    # ループ初回でテーブル作成
-    conn.exec("create table n03_001(select '#{i}' id, #{e})")
-　else
-    
-  end
-  puts e["pref"].encode("cp932")
-end
+# conn.prepare("insert_pref", sql)
+# conn.exec("begin")
+# pref_names.flatten.each_with_index do |e, i|
+  # puts e["pref"].encode("cp932")
+
+  # if i == 0
+    #ループ初回でテーブル作成
+    # conn.exec("create table prefectures as (select '#{i}' id, #{e} from)")
+	# continue
+  # end
+  
+  # conn.exec_prepared("insert_pref", [])
+# end
+
+conn.exec("end")
 
 __END__
 N03-12_43_120331.shp
