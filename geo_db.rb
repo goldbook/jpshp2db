@@ -32,10 +32,10 @@ unless ret.count > 0
   return 0
 end
 
-# 各テーブルの都道府県名をテーブルへ入れていく
 insert_pref_sql = "insert into n03_001 (id, n03_001) values (select $1, n03_001)"
 conn.prepare("insert_pref", sql)
 
+# 各テーブルの都道府県名をテーブルへ入れていく
 conn.exec("begin")
 ret.values.each_with_index do |n, i|
   # テーブル名を可変にしてprepareはできないので都度生成
@@ -46,7 +46,7 @@ ret.values.each_with_index do |n, i|
 
   if i == 0
     #ループ初回でテーブル作成
-    conn.exec("create table n03_001 as (SELECT distinct n03_001 pref FROM \"#{n[0]}\" where n03_001 is not null)")
+    conn.exec("create table n03_001 as (SELECT '#{i}' as id, n03_001 as name FROM \"#{n[0]}\" where n03_001 is not null) limit 1")
 	next
   else
     #ループ初回以外
@@ -55,6 +55,9 @@ ret.values.each_with_index do |n, i|
 end
 
 conn.exec("end")
+
+puts "select * from n03_001"
+conn.exec("select * from n03_001").each{|r| puts r["id"] + ":" + r["name"].encode("cp932")}
 
 __END__
 N03-12_43_120331.shp
