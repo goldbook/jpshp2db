@@ -20,32 +20,37 @@ conn = Sequel.connect(
   :user=>ARGV[0], 
   :password=>ARGV[1]
 );
+
 puts conn
 
+# shpテーブルと作成予定テーブルは頭が被るので消しておく
+conn.drop_table?(:n03_001)
+
 # postgres向け。pg_stat_user_tablesテーブルから既存テーブル名を取得
-relnames = conn[:pg_stat_user_tables].select(:relname).filter(:relname.like(TABLE_NAME_PREFIX)).order(:relname).all
+relnames = conn[:pg_stat_user_tables].select(:relname).
+  filter(:relname.like(TABLE_NAME_PREFIX)).order(:relname).all
 unless relnames.count > 0
   puts "no shp tables"
   return 0
 end
+
 puts "relnames.count: #{relnames.count.to_s}" 
 
 # 各テーブルの都道府県名をテーブルへ入れていく
 conn.transaction do
   relnames.each_with_index do |column, i|
     if(i == 0)
-      conn.create_table(:n03_001) do
-        primary_key :id
+      conn.create_table!(:n03_001) do
+        primary_key :id, :auto_increment => true
         String :name
       end
     end
-    
-    sql = "select n03_001 from \"#{column[:relname]}\" where n03_001 is not null limit 1"
+
+    sql = "select n03_001 as name from \"#{column[:relname]}\" where n03_001 is not null limit 1"
+    puts sql
     shp_pref_col = conn.run(sql)
-    new_pref_table = conn[:n03_001]
-    # shp_pref_col = conn.run("select ")
-      # .select(:n03_001).filter~{:n03_001 => nil}.first
-    # new_pref_table.insert(:name, pref_name_col[:n03_001])
+    
+    conn[:n03_001].insert(shp_pref_col)
   end
 end
 

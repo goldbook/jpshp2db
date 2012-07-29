@@ -1,17 +1,13 @@
 ﻿# 更新監視して自動実行
 # watchr watchr.rb user pass 
 require 'sequel'
-require 'ruby_gntp'
 
 puts ARGV
-growl = GNTP.new(
-  :app_name => "ruby",
-  :icon     => "", #空文字列だと歯車ウィンドウマーク
-  :sticky=> true, #固定表示フラグ。クリックするまで残る
-)
+puts "Time.now: #{Time.now}"
 
 # このファイル自身が監視対象に入ってない？
 watch( '(.*)\.rb' ) do |md|
+  
   begin
     system("ruby #{md[0]} #{ARGV[1]} #{ARGV[2]}")
     
@@ -25,12 +21,10 @@ watch( '(.*)\.rb' ) do |md|
     )
     result.check(!db[:n03_001].all.nil?)
     result.check(db[:n03_001].all.count == 47)
+    
     p result
-    growl.notify(:title => "geo_db result", :text => result.to_s)
-  
+    
   rescue
-    growl.notify(:title => "geo_db result", :text => result.to_s)
-    growl.notify(:title => "error!!", :text => "restart watchr")
     system("watchr watchr.rb #{ARGV[1]} #{ARGV[2]}")
   end
 end
