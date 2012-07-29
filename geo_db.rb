@@ -1,4 +1,4 @@
-﻿require 'pg'
+﻿require 'sequel'
 require 'pry'
 
 puts ARGV
@@ -13,51 +13,41 @@ TABLE_NAME_PREFIX = "n03%" #大文字小文字区別する
 DB_NAME = "geo"
 TODOFUKEN_NUM = 47 # 都道府県の数
 
-conn = PG.connect(dbname: DB_NAME, user: ARGV[0] ,password: ARGV[1]);
+conn = Sequel.connect(
+  :adapter=>'postgres', 
+  :host=>'localhost', 
+  :database=>DB_NAME, 
+  :user=>ARGV[0], 
+  :password=>ARGV[1]
+);
 puts conn
 
-# shp取り込み結果のテーブルじゃないので消しておく
-select_table_name_sql = "select relname from pg_stat_user_tables where relname = $1"
-conn.prepare("select_table_name", select_table_name_sql)
-conn.exec("drop table n03_001") if conn.exec_prepared("select_table_name", ["n03_001"]).count == 1;
-
-sql = "select relname from pg_stat_user_tables where relname like $1 order by relname"
-conn.prepare("pref_tabels", sql)
-ret = conn.exec_prepared("pref_tabels", [TABLE_NAME_PREFIX])
-
-ret.each{|r| puts r}
-
-unless ret.count > 0
+# postgres向け。pg_stat_user_tablesテーブルから既存テーブル名を取得
+relnames = conn[:pg_stat_user_tables].select(:relname).filter(:relname.like(TABLE_NAME_PREFIX)).order(:relname).all
+unless relnames.count > 0
   puts "no shp tables"
   return 0
 end
-
-insert_pref_sql = "insert into n03_001 (id, n03_001) values (select $1, n03_001)"
-conn.prepare("insert_pref", sql)
+puts "relnames.count: #{relnames.count.to_s}" 
 
 # 各テーブルの都道府県名をテーブルへ入れていく
-conn.exec("begin")
-ret.values.each_with_index do |n, i|
-  # テーブル名を可変にしてprepareはできないので都度生成
-  sql = "SELECT distinct n03_001 pref FROM \"#{n[0]}\" where n03_001 is not null"
-  pref_name = conn.exec(sql)[0]["pref"]
-  
-  puts i.to_s + ": " + pref_name.encode("cp932")
-
-  if i == 0
-    #ループ初回でテーブル作成
-    conn.exec("create table n03_001 as (SELECT '#{i}' as id, n03_001 as name FROM \"#{n[0]}\" where n03_001 is not null) limit 1")
-	next
-  else
-    #ループ初回以外
-	
-  end  
+conn.transaction do
+  relnames.each_with_index do |column, i|
+    if(i == 0)
+      conn.create_table(:n03_001) do
+        primary_key :id
+        String :name
+      end
+    end
+    
+    sql = "select n03_001 from \"#{column[:relname]}\" where n03_001 is not null limit 1"
+    shp_pref_col = conn.run(sql)
+    new_pref_table = conn[:n03_001]
+    # shp_pref_col = conn.run("select ")
+      # .select(:n03_001).filter~{:n03_001 => nil}.first
+    # new_pref_table.insert(:name, pref_name_col[:n03_001])
+  end
 end
-
-conn.exec("end")
-
-puts "select * from n03_001"
-conn.exec("select * from n03_001").each{|r| puts r["id"] + ":" + r["name"].encode("cp932")}
 
 __END__
 N03-12_43_120331.shp
