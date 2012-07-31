@@ -19,7 +19,7 @@ conn = Sequel.connect(
   :database=>DB_NAME, 
   :user=>ARGV[0], 
   :password=>ARGV[1]
-);
+)
 
 puts conn
 
