@@ -41,7 +41,7 @@ conn.transaction do
   relnames.each_with_index do |column, i|
     if(i == 0)
       conn.create_table!(:n03_001) do
-        primary_key :id, :auto_increment => true
+        primary_key :id
         String :name
       end
     end
@@ -50,7 +50,8 @@ conn.transaction do
     puts sql
     shp_pref_col = conn.run(sql)
     
-    conn[:n03_001].insert(shp_pref_col)
+    p shp_pref_col
+    # conn[:n03_001].insert(shp_pref_col)
   end
 end
 
