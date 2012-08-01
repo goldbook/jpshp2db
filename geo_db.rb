@@ -40,18 +40,18 @@ puts "relnames.count: #{relnames.count.to_s}"
 conn.transaction do
   relnames.each_with_index do |column, i|
     if(i == 0)
+      puts "create table"
       conn.create_table!(:n03_001) do
         primary_key :id
         String :name
       end
     end
 
-    sql = "select n03_001 as name from \"#{column[:relname]}\" where n03_001 is not null limit 1"
-    puts sql
-    shp_pref_col = conn.run(sql)
-    
-    p shp_pref_col
-    # conn[:n03_001].insert(shp_pref_col)
+    sql = "select n03_001 as name from \"#{column[:relname]}\" "
+    sql += "where n03_001 is not null limit 1"
+    conn.fetch(sql) do |row|
+      conn[:n03_001].insert(:name => row[:name])
+    end
   end
 end
 
