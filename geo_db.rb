@@ -45,8 +45,18 @@ conn.transaction do
         primary_key :id
         String :name
       end
-    end
 
+      table_symbol_ary = [:n03_002, :n03_003, :n03_004, :n03_007]      
+      table_symbol_ary.each do |symbol|
+        conn.create_table!(symbol) do
+          primary_key :id
+          integer :parent_id
+          String :name
+        end
+      end
+    end
+    
+    # 都道府県名挿入
     sql = "select n03_001 as name from \"#{column[:relname]}\" "
     sql += "where n03_001 is not null limit 1"
     conn.fetch(sql) do |row|
