@@ -53,7 +53,7 @@ watch( '(.*)\.rb' ) do |md|
     
     result.check(db.table_exists?(:n03_001), "db.table_exists?(:n03_001)")
     if(db.table_exists?(:n03_001))
-      result.check(db[:n03_001].all.count == 47, db.table_exists?(:n03_001))
+      result.check(db[:n03_001].all.count == 47, "db[:n03_001].all.count == 47")
     end
     
     puts result.to_s  
