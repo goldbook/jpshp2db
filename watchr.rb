@@ -58,14 +58,15 @@ watch( '(.*)\.rb' ) do |md|
       result.check(db[:n03_001].where(:name => "沖縄県").one?,"exist okinawa?")
     end
     result.check(db.table_exists?(:n03_002), "db.table_exists?(:n03_002)")
-    result.check(db[:n03_002].columns.include?(:parent_id), "has parent_id?")
     result.check(db.table_exists?(:n03_003), "db.table_exists?(:n03_003)")
-    result.check(db[:n03_003].columns.include?(:parent_id), "has parent_id?")
     result.check(db.table_exists?(:n03_004), "db.table_exists?(:n03_004)")
-    result.check(db[:n03_004].columns.include?(:parent_id), "has parent_id?")
     result.check(db.table_exists?(:n03_007), "db.table_exists?(:n03_007)")
-    result.check(db[:n03_007].columns.include?(:parent_id), "has parent_id?")
-    
+
+    result.check(
+      db[:n03_002].where(:name.like('%支庁%')).all.count > 0, 
+      "exist sityou?"
+    )
+
     puts result.to_s
   rescue
     system("watchr watchr.rb #{ARGV[1]} #{ARGV[2]}")

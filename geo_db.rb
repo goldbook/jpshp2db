@@ -24,7 +24,7 @@ conn = Sequel.connect(
 puts conn
 
 # shpテーブルと作成予定テーブルは頭が被るので消しておく
-conn.drop_table?(:n03_002, :n03_003, :n03_004, :n03_007)
+conn.drop_table?(:n03_001, :n03_002, :n03_003, :n03_004, :n03_007)
 
 # postgres向け。pg_stat_user_tablesテーブルから既存テーブル名を取得
 relnames = conn[:pg_stat_user_tables].select(:relname).
@@ -58,11 +58,21 @@ conn.transaction do
       end
     end
     
+    escaped_name = "\"#{column[:relname]}\""
+    insert_pref_sql = "select n03_001 as name from #{escaped_name} "
+    insert_pref_sql += "where n03_001 is not null limit 1"
+    insert_sityou_sql = "select distinct n03_001.id as parent_id, n03_002 as name from #{escaped_name} "
+    insert_sityou_sql += " left join n03_001 on n03_001.name = #{escaped_name}.n03_002 where n03_002 is not null"
+
     # 都道府県名挿入
-    sql = "select n03_001 as name from \"#{column[:relname]}\" "
-    sql += "where n03_001 is not null limit 1"
-    conn.fetch(sql) do |row|
+    conn.fetch(insert_pref_sql) do |row|
       conn[:n03_001].insert(:name => row[:name])
+    end
+    
+    # 支庁名挿入
+    conn.fetch(insert_sityou_sql) do |row|
+      puts row.to_s
+      conn[:n03_002].insert(:parent_id => 1, :name => row[:name])
     end
   end
 end
