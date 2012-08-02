@@ -24,7 +24,7 @@ conn = Sequel.connect(
 puts conn
 
 # shpテーブルと作成予定テーブルは頭が被るので消しておく
-conn.drop_table?(:n03_001)
+conn.drop_table?(:n03_002, :n03_003, :n03_004, :n03_007)
 
 # postgres向け。pg_stat_user_tablesテーブルから既存テーブル名を取得
 relnames = conn[:pg_stat_user_tables].select(:relname).
@@ -41,6 +41,7 @@ conn.transaction do
   relnames.each_with_index do |column, i|
     if(i == 0)
       puts "create table"
+      # 都道府県名テーブル
       conn.create_table!(:n03_001) do
         primary_key :id
         String :name
@@ -48,6 +49,7 @@ conn.transaction do
 
       table_symbol_ary = [:n03_002, :n03_003, :n03_004, :n03_007]      
       table_symbol_ary.each do |symbol|
+        # 親を持つ各要素のテーブル
         conn.create_table!(symbol) do
           primary_key :id
           integer :parent_id
