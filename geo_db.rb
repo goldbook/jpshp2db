@@ -52,7 +52,7 @@ conn.transaction do
         # 親を持つ各要素のテーブル
         conn.create_table!(symbol) do
           primary_key :id
-          integer :parent_id
+          integer :parent_id, :null=>false
           String :name
         end
       end
@@ -69,10 +69,9 @@ conn.transaction do
       conn[:n03_001].insert(:name => row[:name])
     end
     
-    # 支庁名挿入
+    # 支庁名挿入。北海道以外ではn03_002がnull埋めなのでループに入る事がない
     conn.fetch(select_sityou_sql) do |row|
-      puts row.to_s
-      conn[:n03_002].insert(:parent_id => row[:parent_id], :name => row[:name])
+      conn[:n03_002].insert(:parent_id => 1, :name => row[:name])
     end
   end
 end
