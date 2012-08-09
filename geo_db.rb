@@ -57,12 +57,13 @@ conn.transaction do
         end
       end
     end
-    
+
     escaped_name = "\"#{column[:relname]}\""
     select_pref_sql = "select n03_001 as name from #{escaped_name} "
     select_pref_sql += "where n03_001 is not null limit 1"
-    select_sityou_sql = "select distinct n03_001.id as parent_id, n03_002 as name from #{escaped_name} "
-    select_sityou_sql += " left join n03_001 on n03_001.name = #{escaped_name}.n03_002 where n03_002 is not null"
+    select_sityou_sql = "SELECT distinct prefs.id AS parent_id, shp.n03_002 AS name FROM public.#{escaped_name} shp, public.n03_001 prefs WHERE prefs.name = shp.n03_001"
+    select_gun_sql = "SELECT distinct pref.id AS parent_id, shp.n03_003 AS name "
+    select_gun_sql += " FROM public.#{escaped_name} shp, public.n03_001 pref WHERE shp.n03_001 = pref.name;"
 
     # 都道府県名挿入
     conn.fetch(select_pref_sql) do |row|
@@ -72,6 +73,11 @@ conn.transaction do
     # 支庁名挿入。北海道以外ではn03_002がnull埋めなのでループに入る事がない
     conn.fetch(select_sityou_sql) do |row|
       conn[:n03_002].insert(:parent_id => 1, :name => row[:name])
+    end
+
+    # 郡名挿入
+    conn.fetch(select_gun_sql) do |row|
+      conn[:n03_003].insert(row)
     end
   end
 end
