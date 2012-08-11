@@ -73,14 +73,16 @@ conn.transaction do
       conn[:n03_001].insert(:name => row[:name])
     end
     
-    # 支庁名挿入。北海道以外ではn03_002がnull埋めなのでループに入る事がない
+    # 支庁名挿入
     conn.fetch(select_sityou_sql) do |row|
-      conn[:n03_002].insert(:parent_id => 1, :name => row[:name])
+      name_to_insert = if row[:name].nil? then "なし" else row[:name] end
+      conn[:n03_002].insert(:parent_id => 1, :name => name_to_insert)
     end
 
     # 郡名挿入
     conn.fetch(select_gun_sql) do |row|
-      conn[:n03_003].insert(row)
+      name_to_insert = if row[:name].nil? then "なし" else row[:name] end
+      conn[:n03_003].insert(:parent_id=>row[:parent_id], :name=>name_to_insert)
     end
   end
 end

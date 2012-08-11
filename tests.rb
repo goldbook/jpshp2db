@@ -77,20 +77,17 @@ begin
   hokkaido_id = db[:n03_001].select(:id).where(:name => "北海道").first[:id]
   count_valid_row = db[:n03_002].where(:name.like('%支庁%'), :parent_id=>hokkaido_id).count
   result.check(count_valid_row > 0, "count valid row")
+  result.check(db[:n03_002].where('name is null').all.count == 0,"sityou.name is not null")
   
   # 郡テーブルの内容チェック
   result.check(db[:n03_003].all.count > 0, "exit row in n03_003 ?") #内容存在チェック
   result.check(db[:n03_003].select(:name).distinct.all.count > 1, "n03_003 has many values ?")
   # 郡までの結合チェック
-  result.check(
-    db[:n03_003].join(:n03_002, :parent_id=>:n03_002__id)
-      .join(:n03_001, :parent_id=>:n03_001__id).where, 
-    "join pref to gun?"
-  )
- 
-  #全テーブルの結合
-  all_join_sql = "SELECT pref.name, sub_pref.name, seirei.name, muni.name, code.name FROM public.n03_001 pref, public.n03_002 sub_pref, public.n03_004 muni, public.n03_007 code, public.n03_003 seirei WHERE pref.id = sub_pref.parent_id AND sub_pref.id = seirei.parent_id AND muni.parent_id = seirei.id AND code.parent_id = muni.id;" 
-  result.check(db.execute(all_join_sql).all.count > 0, "can join all tbl ?")
+  gun_to_pref_dataset = db[:n03_003].join(:n03_002, :parent_id=>:id)
+      .join(:n03_001, :n03_002__id=>:id)
+  result.check(gun_to_pref_dataset.all.count > 0,"join pref to gun? (#{gun_to_pref_dataset.all.count})")
+  result.check(db[:n03_003].where('name is null').all.count == 0,"gun.name is not null")
+
 ensure
   p result
 end
