@@ -1,13 +1,16 @@
 ﻿require 'sequel'
 require 'pry'
 
-puts ARGV
+puts "*** start geo_db.rb ***"
+puts ARGV.to_s
 
 unless ARGV.size == 2
   puts "need username, password"
-  puts "user: ARGV[0] ,password: ARGV[1]"
   exit
 end
+
+USER = ARGV[0]
+PASSWORD = ARGV[1]
 
 TABLE_NAME_PREFIX = "n03%" #大文字小文字区別する
 DB_NAME = "geo"
@@ -17,8 +20,8 @@ conn = Sequel.connect(
   :adapter=>'postgres', 
   :host=>'localhost', 
   :database=>DB_NAME, 
-  :user=>ARGV[0], 
-  :password=>ARGV[1]
+  :user=>USER, 
+  :password=>PASSWORD
 )
 
 puts conn
@@ -81,6 +84,8 @@ conn.transaction do
     end
   end
 end
+
+puts "*** finish geo_db.rb ***"
 
 __END__
 N03-12_43_120331.shp
