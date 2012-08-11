@@ -1,7 +1,8 @@
 jpshp2db
 ========
 
-国土地理院の公開しているshpファイルを使いやすい構造のDBへ
+※未完成  
+国土地理院の公開しているshpファイルを使いやすい構造のDBへ  
 
 *require*  
 オブジェクト指向スクリプト言語 Ruby <http://www.ruby-lang.org/ja/>  
