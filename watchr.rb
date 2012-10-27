@@ -1,8 +1,8 @@
-﻿# 更新監視して自動テスト実行
-# watchr watchr.rb user pass 
+=begin 更新監視して自動テスト実行
+watchr watchr.rb user pass 
+=end
 require 'sequel'
 
-# このファイル自身が監視対象に入ってない？
 watch( '(.*)\.rb' ) do |md|
   puts "*** launch watchr.rb ***"
   puts ARGV.to_s
